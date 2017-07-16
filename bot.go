@@ -5,9 +5,11 @@ import (
     "os"
     "os/signal"
     "syscall"
-    "math/rand"
-    "strconv"
     "time"
+    "strings"
+    "net/http"
+    "regexp"
+    "io/ioutil"
 
     "github.com/bwmarrin/discordgo"
 )
@@ -35,7 +37,7 @@ func main() {
     return
   }
 
-  fmt.Println("Dice-bot is now running! Ctrl + c to exit.")
+  fmt.Println("TagBot is now running! Ctrl + c to exit.")
   sc := make(chan os.Signal, 1)
   signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
   <-sc
@@ -43,9 +45,9 @@ func main() {
   discord.Close()
 }
 
-func random(min, max int) int {
-    rand.Seed(time.Now().Unix())
-    return rand.Intn(max - min) + min
+func safeCommand(command string) string {
+  regex, _ := regexp.Compile("[^a-zA-Z]+")
+  return regex.ReplaceAllString(command, "")
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -53,6 +55,24 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
     return
   }
   if m.Content == "!roll" {
-    s.ChannelMessageSend(m.ChannelID, strconv.Itoa(random(1, 20)))
+    return
+  }
+
+  if strings.Contains(m.Content, "!") {
+    line := strings.Split(m.Content, " ")
+    command := safeCommand(line[0][1:])
+    args := line[1:]
+
+    s.ChannelMessageSend(m.ChannelID, "Dynamic command recieved: [" + command + "] with args [" + strings.Join(args, ",") +"]")
+
+    resp, err := http.Get("http://" + command + "/execute?args=" + strings.Join(args, ","))
+    if err != nil {
+      s.ChannelMessageSend(m.ChannelID, "No service found currently servicing command: ["+ command + "]")
+      s.ChannelMessageSend(m.ChannelID, "Error: ["+ err.Error() + "]")
+      return
+    }
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    s.ChannelMessageSend(m.ChannelID, "Executed: " + command + ". Got: " + string(body))
   }
 }
