@@ -5,9 +5,9 @@ import (
     "os"
     "os/signal"
     "syscall"
-    "time"
     "strings"
     "net/http"
+    "net/url"
     "regexp"
     "io/ioutil"
 
@@ -59,15 +59,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
   }
 
   if strings.Contains(m.Content, "!") {
-    line := strings.Split(m.Content, " ")
+    line := strings.SplitN(m.Content, " ", 2)
     command := safeCommand(line[0][1:])
-    args := line[1:]
+    args := line[1]
 
-    s.ChannelMessageSend(m.ChannelID, "Dynamic command recieved: [" + command + "] with args [" + strings.Join(args, ",") +"]")
+    s.ChannelMessageSend(m.ChannelID, "Dynamic command recieved: [" + command + "] with args [" + args +"]")
 
-    resp, err := http.Get("http://" + command + "/execute?args=" + strings.Join(args, ","))
+    resp, err := http.Get("http://" + command + "/execute?args=" + url.QueryEscape(args))
     if err != nil {
-      s.ChannelMessageSend(m.ChannelID, "No service found currently servicing command: ["+ command + "]")
       s.ChannelMessageSend(m.ChannelID, "Error: ["+ err.Error() + "]")
       return
     }
