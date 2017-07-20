@@ -1,8 +1,5 @@
-FROM golang:1.9
+FROM scratch
 
-ADD . $GOPATH/src/github.com/zalfonse/wiki
+COPY build/wiki /service/wiki
 
-WORKDIR $GOPATH/src/github.com/zalfonse/wiki
-RUN go build
-
-ENTRYPOINT ["./wiki"]
+ENTRYPOINT ["/service/wiki"]

@@ -1,8 +1,5 @@
-FROM golang:1.9
+FROM scratch
 
-ADD . $GOPATH/src/github.com/zalfonse/dice
+COPY build/dice /service/dice
 
-WORKDIR $GOPATH/src/github.com/zalfonse/dice
-RUN go build
-
-ENTRYPOINT ["./dice"]
+ENTRYPOINT ["/service/dice"]
