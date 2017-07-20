@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package dice;
+
+service Roller {
+    rpc Roll (Dice) returns (stream Result) {}
+}
+
+message Dice {
+    int32 rolls = 1;
+    int32 sides = 2;
+}
+
+message Result {
+    int32 roll = 1;
+    int32 result = 2;
+}
