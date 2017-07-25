@@ -1,0 +1,4 @@
+package: github.com/zalfonse/tagbot
+import:
+- package: github.com/bwmarrin/discordgo
+- package: github.com/zalfonse/lumber
