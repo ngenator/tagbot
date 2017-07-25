@@ -7,7 +7,11 @@ import (
     "io/ioutil"
     "net/url"
     "strings"
+
+    "github.com/zalfonse/lumber"
 )
+
+var logger *lumber.Logger
 
 type WikiSearchResult struct {
   Title string `json:"title"`
@@ -26,6 +30,7 @@ type WikiSearchResponse struct {
 }
 
 func WikiSearch(term string) string {
+  logger.Info("Searching: " + term)
   resp, err := http.Get("https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&srsearch=" + url.QueryEscape(term))
   if err != nil {
     return "Error: [" + err.Error() + "]"
@@ -47,6 +52,7 @@ func execute(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+    logger = lumber.NewLogger(lumber.TRACE)
     http.HandleFunc("/execute", execute) // set router
     http.ListenAndServe(":80", nil) // set listen port
 }
